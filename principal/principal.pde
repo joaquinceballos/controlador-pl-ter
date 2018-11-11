@@ -44,8 +44,8 @@ void draw() {
 void keyPressed() {
   if (dibujos.size() > 0) {
     background(colorFondo);
-    indicePintado = indicePintado == dibujos.size() - 1 ? 0 : indicePintado + 1;
     dibujar(indicePintado);
+    indicePintado = indicePintado == dibujos.size() - 1 ? 0 : indicePintado + 1;
   }
 }
 
