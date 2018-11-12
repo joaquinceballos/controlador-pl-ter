@@ -14,11 +14,10 @@ long ultimaId = -1;
 boolean hiloTrabajando = false;
 
 // dibujos
-//JSONArray dibujos = new JSONArray();
-ArrayList<Dibujo> dibujos2 = new ArrayList<Dibujo>();
+ArrayList<Dibujo> dibujos = new ArrayList<Dibujo>();
 
 // provisional para ver algo de momento
-int indicePintado = 0;
+int indicePintado = -1;
 
 // colores
 color blanco = #FFFFFF;
@@ -37,34 +36,25 @@ void draw() {
   if (millis() - tUltimaCarga > FRECUENCIA_CONSULTA && !hiloTrabajando) {
     thread("cargaNuevosDibujos");
   }
+  if (indicePintado == -1 && !dibujos.isEmpty()) {
+    indicePintado = 0;
+    dibujar(dibujos.get(0));
+  }
 }
 
 /**
  provisional
  */
 void keyPressed() {
-  if (dibujos.size() > 0) {
+  if (dibujos.size() > 0 && (keyCode == RIGHT || keyCode == LEFT)) {
     background(colorFondo);
-    dibujar(indicePintado);
-    indicePintado = indicePintado == dibujos.size() - 1 ? 0 : indicePintado + 1;
+    if (keyCode == LEFT) {
+      indicePintado = indicePintado == 0 ? dibujos.size() - 1 : indicePintado - 1;
+    } else {      
+      indicePintado = indicePintado == dibujos.size() - 1  ? 0 : indicePintado + 1;
+    }
+    dibujar(dibujos.get(indicePintado));
   }
-}
-
-void pintaLinea(JSONObject p0, JSONObject p1, boolean vertical) {
-  float x0, y0, x1, y1;
-  if (vertical) {
-    x0 = p0.getFloat("x") * width;
-    y0 = p0.getFloat("y") * height;
-    x1 = p1.getFloat("x") * width;
-    y1 = p1.getFloat("y") * height;
-  } else {
-    // se invierten
-    x0 = width - p0.getFloat("y") * width;
-    y0 = p0.getFloat("x") * height;
-    x1 = width - p1.getFloat("y") * width;
-    y1 = p1.getFloat("x") * height;
-  }
-  line(x0, y0, x1, y1);
 }
 
 void cargaNuevosDibujos() {
@@ -73,43 +63,16 @@ void cargaNuevosDibujos() {
   for (int i = 0; i < jsonArray.size(); i++) {    
     JSONObject dibujo = jsonArray.getJSONObject(i);
     ultimaId = dibujo.getInt("id");
-    //dibujos.setJSONObject(dibujos.size(), dibujo);
-    dibujos2.add(parseaDibujo(dibujo));
-    println(dibujos2);
+    dibujos.add(parseaDibujo(dibujo));
   }
   tUltimaCarga = millis();
   hiloTrabajando = false;
 }
 
-/**
- provisional para ir viendo. dibuja a pantalla completa considerando que las proporciones son las de un folio
- */
- 
- /*
-void dibujar(int i) {
-  JSONObject dibujo = dibujos.getJSONObject(i);
-  if (dibujo == null) {
-    println("dibujar() -> el dibujo es null y no debería");
-    return;
-  }
-  boolean vertical = dibujo.getBoolean("vertical");
-  JSONArray curvas = dibujo.getJSONArray("curvas");
-  for (int j = 0; j < curvas.size(); j++) {
-    JSONArray puntos = curvas.getJSONObject(j).getJSONArray("puntos");
-    if (puntos.size() == 1) {
-      pintaLinea(puntos.getJSONObject(0), puntos.getJSONObject(0), vertical);
-    }
-    for (int k = 1; k < puntos.size(); k++) {
-      pintaLinea(puntos.getJSONObject(k - 1), puntos.getJSONObject(k), vertical);
-    }
-  }
-}
-*/
-
 void dibujar(Dibujo dibujo) {
   for (Curva curva : dibujo.curvas) {
     if (curva.puntos.size() == 1) {
-      pintaLinea(curva.puntos.get(0), curva.puntos.get(0), dibujo.vertical));
+      pintaLinea(curva.puntos.get(0), curva.puntos.get(0), dibujo.vertical);
     }
     for (int i = 1; i < curva.puntos.size(); i++) {
       pintaLinea(curva.puntos.get(i - 1), curva.puntos.get(i), dibujo.vertical);
@@ -145,7 +108,7 @@ Dibujo parseaDibujo(JSONObject json) {
 ArrayList<Curva> parseaCurvas(JSONArray jsonArray) {
   ArrayList<Curva> curvas = new ArrayList<Curva>();
   for (int j = 0; j < jsonArray.size(); j++) {
-    long id = jsonArray.getJSONObject(j).getLong("n");
+    long id = jsonArray.getJSONObject(j).getLong("id");
     JSONArray puntos = jsonArray.getJSONObject(j).getJSONArray("puntos");
     curvas.add(new Curva(id, parseaPuntos(puntos)));
   }
@@ -161,6 +124,7 @@ ArrayList<Punto> parseaPuntos(JSONArray jsonArray) {
 }
 
 class Dibujo {
+
   final long id;
   final String autor;
   ArrayList<Curva> curvas;
@@ -189,6 +153,7 @@ class Dibujo {
 }
 
 class Curva { 
+
   final long id;
   ArrayList<Punto> puntos;
 
