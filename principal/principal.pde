@@ -1,11 +1,8 @@
 // url del servicio rest de donde se descargan los dibujos
-final String URL = "http://plotter.ddns.net:82";
+final String URL = "http://plotter.ddns.net:8080";
 
 // frecuancia de consulta por nuevos dibujos
 final long FRECUENCIA_CONSULTA = 5000;
-
-// tiempo de la última carga de dibujos
-long tUltimaCarga;
 
 // guarda la id del último dibujo descargado
 long ultimaId = -1;
@@ -24,6 +21,9 @@ color blanco = #FFFFFF;
 color negro = #000000;
 color colorFondo = #F7F4D9;
 
+// hay nuevos dibujos recién cargados
+boolean nuevoDibujo;
+
 void setup() {
   size(500, 707);
   background(colorFondo);
@@ -33,12 +33,10 @@ void setup() {
 }
 
 void draw() {
-  if (millis() - tUltimaCarga > FRECUENCIA_CONSULTA && !hiloTrabajando) {
-    thread("cargaNuevosDibujos");
-  }
-  if (indicePintado == -1 && !dibujos.isEmpty()) {
-    indicePintado = 0;
-    dibujar(dibujos.get(0));
+  if (nuevoDibujo) {
+    nuevoDibujo = false;
+    indicePintado = dibujos.size() - 1;
+    dibujar(dibujos.get(indicePintado));
   }
 }
 
@@ -47,32 +45,33 @@ void draw() {
  */
 void keyPressed() {
   if (dibujos.size() > 0 && (keyCode == RIGHT || keyCode == LEFT)) {
-    background(colorFondo);
     if (keyCode == LEFT) {
       indicePintado = indicePintado == 0 ? dibujos.size() - 1 : indicePintado - 1;
     } else {      
-      indicePintado = indicePintado == dibujos.size() - 1  ? 0 : indicePintado + 1;
+      indicePintado = indicePintado == dibujos.size() - 1 ? 0 : indicePintado + 1;
     }
     dibujar(dibujos.get(indicePintado));
   }
 }
 
 void cargaNuevosDibujos() {
-  hiloTrabajando = true;
-  JSONArray jsonArray = loadJSONArray(URL + "/dibujo/descargar" + (ultimaId == -1 ? "" : "?last=" + (ultimaId)));
-  for (int i = 0; i < jsonArray.size(); i++) {    
-    JSONObject dibujo = jsonArray.getJSONObject(i);
-    ultimaId = dibujo.getInt("id");
-    dibujos.add(parseaDibujo(dibujo));
+  while (true) {
+    JSONArray jsonArray = loadJSONArray(URL + "/dibujo/descargar" + (ultimaId == -1 ? "" : "?last=" + (ultimaId)));
+    for (int i = 0; i < jsonArray.size(); i++) {    
+      JSONObject dibujo = jsonArray.getJSONObject(i);
+      ultimaId = dibujo.isNull("id") ? ultimaId : dibujo.getInt("id");
+      dibujos.add(parseaDibujo(dibujo));
+    }
+    nuevoDibujo = nuevoDibujo || jsonArray.size() > 0;
+    delay(5000);
   }
-  tUltimaCarga = millis();
-  hiloTrabajando = false;
 }
 
 void dibujar(Dibujo dibujo) {
+  background(colorFondo);
   for (Curva curva : dibujo.curvas) {
     if (curva.puntos.size() == 1) {
-      pintaLinea(curva.puntos.get(0), curva.puntos.get(0), dibujo.vertical);
+      pintaLinea(curva.puntos.get(0), curva.puntos.get(0), true);
     }
     for (int i = 1; i < curva.puntos.size(); i++) {
       pintaLinea(curva.puntos.get(i - 1), curva.puntos.get(i), dibujo.vertical);
@@ -98,10 +97,10 @@ void pintaLinea(Punto p0, Punto p1, boolean vertical) {
 }
 
 Dibujo parseaDibujo(JSONObject json) {
-  boolean vertical = json.getBoolean("vertical");
-  String autor = json.getString("autor");
-  JSONArray curvas = json.getJSONArray("curvas");
-  long id = json.getLong("id");
+  boolean vertical = json.isNull("vertical") ? true : json.getBoolean("vertical");
+  String autor = json.isNull("autor") ? "" : json.getString("autor");
+  JSONArray curvas = json.isNull("curvas") ? new JSONArray(): json.getJSONArray("curvas");
+  long id = json.isNull("id") ? -1 : json.getLong("id");
   return new Dibujo(parseaCurvas(curvas), vertical, autor, id);
 }
 
