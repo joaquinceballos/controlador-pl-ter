@@ -24,12 +24,28 @@ color colorFondo = #F7F4D9;
 // hay nuevos dibujos recién cargados
 boolean nuevoDibujo;
 
+// medidas
+
+// sección de la simulación del plotter en la pantalla
+final int MARGEN_PLOTTER = 100;
+int x0Plotter, y0Plotter, anchoPlotter, altoPlotter;
+
 void setup() {
-  size(500, 707);
+  fullScreen();
+  //size(500, 707);
   background(colorFondo);
   stroke(negro);
-  strokeWeight(5);
   thread("cargaNuevosDibujos");
+  
+  // división de la pantalla
+  strokeWeight(2);
+  rect(width - width / 3, MARGEN_PLOTTER, 10, height - 2 * MARGEN_PLOTTER);
+  
+  // medidas del plotter simulado en pantalla
+  x0Plotter = width -  width / 3 + MARGEN_PLOTTER;
+  anchoPlotter = width / 3 - 2 * MARGEN_PLOTTER;
+  altoPlotter = (int) (sqrt(2) * anchoPlotter);
+  y0Plotter = height / 2 - altoPlotter / 2;
 }
 
 void draw() {
@@ -61,6 +77,7 @@ void cargaNuevosDibujos() {
       JSONObject dibujo = jsonArray.getJSONObject(i);
       ultimaId = dibujo.isNull("id") ? ultimaId : dibujo.getInt("id");
       dibujos.add(parseaDibujo(dibujo));
+      // if (ultimaId == 10) { saveJSONObject(dibujo, "data/trump.json"); } // <-- si quieres guardar un dibujo ya que en el servicio rest no hay persistencia, al menos de momento
     }
     nuevoDibujo = nuevoDibujo || jsonArray.size() > 0;
     delay(5000);
@@ -68,7 +85,11 @@ void cargaNuevosDibujos() {
 }
 
 void dibujar(Dibujo dibujo) {
-  background(colorFondo);
+  //println("dibujando:\t" + dibujo.id);
+  fill(blanco);
+  strokeWeight(2);
+  rect(x0Plotter, y0Plotter, anchoPlotter, altoPlotter);
+  strokeWeight(5);
   for (Curva curva : dibujo.curvas) {
     if (curva.puntos.size() == 1) {
       pintaLinea(curva.puntos.get(0), curva.puntos.get(0), true);
@@ -82,16 +103,16 @@ void dibujar(Dibujo dibujo) {
 void pintaLinea(Punto p0, Punto p1, boolean vertical) {
   float x0, y0, x1, y1;
   if (vertical) {
-    x0 = p0.x * width;
-    y0 = p0.y * height;
-    x1 = p1.x * width;
-    y1 = p1.y * height;
+    x0 = x0Plotter + p0.x * anchoPlotter;
+    y0 = y0Plotter + p0.y * altoPlotter;
+    x1 = x0Plotter + p1.x * anchoPlotter;
+    y1 = y0Plotter + p1.y * altoPlotter;
   } else {
     // se invierten
-    x0 = width - p0.y * width;
-    y0 = p0.x * height;
-    x1 = width - p1.y * width;
-    y1 = p1.x * height;
+    x0 = x0Plotter + anchoPlotter - p0.y * anchoPlotter;
+    y0 = y0Plotter + p0.x * altoPlotter;
+    x1 = x0Plotter + anchoPlotter - p1.y * anchoPlotter;
+    y1 = y0Plotter + p1.x * altoPlotter;
   }
   line(x0, y0, x1, y1);
 }
