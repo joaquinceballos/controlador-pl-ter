@@ -114,7 +114,7 @@ void recorreCurvasMarcandoPuntosVisibles() {
   if (marcando != -1) {
     for (Curva curva : dibujos.get(marcando).curvas) {
       for (Punto punto : curva.puntosPixeles) {
-        if ( indicePintado != marcando) {
+        if (indicePintado != marcando) {
           return;
         }
         punto.visible = true;
@@ -145,19 +145,12 @@ void simularPlotter(Dibujo dibujo) {
   strokeWeight(5);
   stroke(colorTrazo);
   for (Curva curva : dibujo.curvas) {
-    if (curva.puntosPixeles.size() == 1) {
-      if (curva.puntosPixeles.get(0).visible && curva.pintable) {
-        line(curva.puntosPixeles.get(0).x, curva.puntosPixeles.get(0).y, curva.puntosPixeles.get(0).x, curva.puntosPixeles.get(0).y);
-      } else if (!curva.puntosPixeles.get(0).visible) {
-        pintarBarrasPlotter(curva.puntosPixeles.get(0).x, curva.puntosPixeles.get(0).y, curva.pintable);
-        return;
-      }
-    }
-    for (int i = 1; i < curva.puntosPixeles.size(); i++) {      
-      if (curva.puntosPixeles.get(i - 1).visible && curva.pintable) {
-        line(curva.puntosPixeles.get(i - 1).x, curva.puntosPixeles.get(i - 1).y, curva.puntosPixeles.get(i).x, curva.puntosPixeles.get(i).y);
-      } else if (!curva.puntosPixeles.get(i - 1).visible) {
-        pintarBarrasPlotter(curva.puntosPixeles.get(i - 1).x, curva.puntosPixeles.get(i - 1).y, curva.pintable);
+    for (int i = 0; i < curva.puntosPixeles.size(); i++) {   
+      Punto punto = curva.puntosPixeles.get(i);
+      if (punto.visible && curva.pintable) {
+        point(punto.x, punto.y);
+      } else if (!punto.visible) {
+        pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
         return;
       }
     }
@@ -188,8 +181,14 @@ void pintarBarrasPlotter(int x, int y, boolean lapiz) {
   stroke(negro);
   strokeWeight(2);        
   fill(colorBarra);
-  rect(x - ANCHO_BARRA_PLOTTER / 2, y0PlotterSimulado - sobresale, ANCHO_BARRA_PLOTTER, altoPlotterSimulado + 2 * sobresale);
-  rect(x0PlotterSimulado - sobresale, y - ANCHO_BARRA_PLOTTER / 2, anchoPlotterSimulado + 2 * sobresale, ANCHO_BARRA_PLOTTER);
+  rect(x - ANCHO_BARRA_PLOTTER / 2, 
+    y0PlotterSimulado - sobresale, 
+    ANCHO_BARRA_PLOTTER, 
+    altoPlotterSimulado + 2 * sobresale);
+  rect(x0PlotterSimulado - sobresale, 
+    y - ANCHO_BARRA_PLOTTER / 2, 
+    anchoPlotterSimulado + 2 * sobresale, 
+    ANCHO_BARRA_PLOTTER);
   if (lapiz) {
     fill(rojo);
     ellipse(x, y, 2 * ANCHO_BARRA_PLOTTER, 2 * ANCHO_BARRA_PLOTTER);
