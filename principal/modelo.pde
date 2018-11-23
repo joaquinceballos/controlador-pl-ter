@@ -10,6 +10,16 @@ class Dibujo {
     this.vertical = vertical;
     this.autor = autor;
     this.id = id;
+    
+    int nPixeles = 0;
+    int nPasos = 0;
+    
+    for(Curva curva : curvas){
+     nPixeles += curva.pixeles.size();
+     nPasos += curva.pasos.size();
+    }
+    
+    println("Dibujo: " + id + "\n\tpíxeles: " + nPixeles + "\n\tpasos: " + nPasos);
   }
 }
 
@@ -21,20 +31,20 @@ class Curva {
   boolean pintable = true;
 
   // para pintar el dibujo en pantalla
-  ArrayList<Punto> puntosPixeles = new ArrayList<Punto>();
+  ArrayList<Punto> pixeles = new ArrayList<Punto>();
 
   // para pintar el dibujo en papel
-  ArrayList<Punto> puntosPasos = new ArrayList<Punto>();
+  ArrayList<Punto> pasos = new ArrayList<Punto>();
 
-  Curva (long id, ArrayList<PuntoPorcentaje> puntosPorcentajes, boolean vertical, boolean pintable) {
-    this(id, puntosPorcentajes, vertical);
+  Curva (long id, ArrayList<PuntoRelativo> puntosRelativos, boolean vertical, boolean pintable) {
+    this(id, puntosRelativos, vertical);
     this.pintable = pintable;
   }
 
-  Curva(long id, ArrayList<PuntoPorcentaje> puntosPorcentajes, boolean vertical) {
+  Curva(long id, ArrayList<PuntoRelativo> puntosRelativos, boolean vertical) {
     this.id = id;
-    this.puntosPixeles = rutaDibujo(puntosPorcentajes, x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado, vertical);
-    //this.puntosPasos = rutaDibujo(puntosPorcentajes, X0_PLOTTER_REAL, Y0_PLOTTER_REAL, ANCHO_PLOTTER_REAL, ALTO_PLOTTER_REAL, vertical);
+    this.pixeles = rutaDibujo(puntosRelativos, x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado, vertical);
+    this.pasos = rutaDibujo(puntosRelativos, X0_PLOTTER, Y0_PLOTTER, ANCHO_PLOTTER, ALTO_PLOTTER, vertical);
   }
 }
 
@@ -46,12 +56,16 @@ class Punto {
     this.x = x;
     this.y = y;
   }
+
+  public boolean equals(Punto otroPunto) {
+    return this.x == otroPunto.x && this.y == otroPunto.y;
+  }
 }
 
-class PuntoPorcentaje {
-  float x, y;
+class PuntoRelativo {
+  final float x, y;
 
-  PuntoPorcentaje(float x, float y) {
+  PuntoRelativo(float x, float y) {
     this.x = x;
     this.y = y;
   }

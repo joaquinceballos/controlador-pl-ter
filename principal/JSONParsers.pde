@@ -18,30 +18,30 @@ ArrayList<Curva> parseaCurvas(JSONArray jsonArray, boolean vertical) {
   for (int j = 0; j < jsonArray.size(); j++) {
     long id = jsonArray.getJSONObject(j).getLong("id");
     JSONArray puntos = jsonArray.getJSONObject(j).getJSONArray("puntos");
-    ArrayList<PuntoPorcentaje> puntosTransicion = new ArrayList<PuntoPorcentaje>();
-    ArrayList<PuntoPorcentaje> puntosCurva = parseaPuntos(puntos);
-    puntosTransicion.add(new PuntoPorcentaje(x, y));
-    puntosTransicion.add(new PuntoPorcentaje(puntosCurva.get(0).x, puntosCurva.get(0).y));  
+    ArrayList<PuntoRelativo> puntosTransicion = new ArrayList<PuntoRelativo>();
+    ArrayList<PuntoRelativo> puntosCurva = parseaPuntos(puntos);
+    puntosTransicion.add(new PuntoRelativo(x, y));
+    puntosTransicion.add(new PuntoRelativo(puntosCurva.get(0).x, puntosCurva.get(0).y));  
     curvas.add(new Curva(-1, puntosTransicion, vertical, false));
     curvas.add(new Curva(id, puntosCurva, vertical));
     x = puntosCurva.get(puntosCurva.size() - 1).x;
     y = puntosCurva.get(puntosCurva.size() - 1).y;
   }
   if (!curvas.isEmpty()) {
-    ArrayList<PuntoPorcentaje> puntosTransicion = new ArrayList<PuntoPorcentaje>();
-    puntosTransicion.add(new PuntoPorcentaje(x, y));
-    puntosTransicion.add(new PuntoPorcentaje(0, vertical ? 0 : 1));  
+    ArrayList<PuntoRelativo> puntosTransicion = new ArrayList<PuntoRelativo>();
+    puntosTransicion.add(new PuntoRelativo(x, y));
+    puntosTransicion.add(new PuntoRelativo(0, vertical ? 0 : 1));  
     curvas.add(new Curva(-1, puntosTransicion, vertical, false));
   }
   return curvas;
 }
 
-ArrayList<PuntoPorcentaje> parseaPuntos(JSONArray jsonArray) {
-  ArrayList<PuntoPorcentaje> puntos = new ArrayList<PuntoPorcentaje>();
+ArrayList<PuntoRelativo> parseaPuntos(JSONArray jsonArray) {
+  ArrayList<PuntoRelativo> puntos = new ArrayList<PuntoRelativo>();
   for (int j = 0; j < jsonArray.size(); j++) {
     float x = jsonArray.getJSONObject(j).getFloat("x");
     float y = jsonArray.getJSONObject(j).getFloat("y");
-    puntos.add(new PuntoPorcentaje(x, y));
+    puntos.add(new PuntoRelativo(x, y));
   }
   return puntos;
 }
