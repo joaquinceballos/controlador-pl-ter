@@ -16,7 +16,7 @@ ArrayList<Curva> parseaCurvas(JSONArray jsonArray, boolean vertical) {
   float x = 0;
   float y =  vertical ? 0 : 1;
   for (int j = 0; j < jsonArray.size(); j++) {
-    long id = jsonArray.getJSONObject(j).getLong("id");
+    long id = jsonArray.getJSONObject(j).isNull("id") ? 0 : jsonArray.getJSONObject(j).getLong("id");
     JSONArray puntos = jsonArray.getJSONObject(j).getJSONArray("puntos");
     ArrayList<PuntoRelativo> puntosTransicion = new ArrayList<PuntoRelativo>();
     ArrayList<PuntoRelativo> puntosCurva = parseaPuntos(puntos);

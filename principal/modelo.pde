@@ -11,15 +11,18 @@ class Dibujo {
     this.autor = autor;
     this.id = id;
     
+    /*
+    BORRAR
     int nPixeles = 0;
     int nPasos = 0;
     
-    for(Curva curva : curvas){
-     nPixeles += curva.pixeles.size();
-     nPasos += curva.pasos.size();
+    for(Curva curva : curvas) {
+      nPixeles += curva.pixeles.size();
+      nPasos += curva.pasos.size();
     }
     
     println("Dibujo: " + id + "\n\tpíxeles: " + nPixeles + "\n\tpasos: " + nPasos);
+    */
   }
 }
 

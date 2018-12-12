@@ -4,9 +4,6 @@ final String URL = "http://plotter.ddns.net:8080";
 // frecuancia de consulta por nuevos dibujos
 final int FRECUENCIA_CONSULTA = 5000;
 
-// guarda la id del último dibujo descargado
-long ultimaId = -1;
-
 // control para el hilo que carga dibujos, sólo uno a la vez
 boolean hiloTrabajando = false;
 
@@ -34,7 +31,7 @@ final int MARGEN_PLOTTER = 100;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
 final int PAUSA_PINTADO_SIMULADOR = 3;
-final int GROSOR_TRAZO = 4;
+//final int GROSOR_TRAZO = 4;    // mejor que el trazo dependa del dibujo, si es de un svg interesa que sea más fino
 int x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado;
 
 // dibujo está siendo pintado en estos momentos
@@ -47,6 +44,21 @@ final int X0_PLOTTER = MARGEN_PASOS;
 final int Y0_PLOTTER = MARGEN_PASOS; 
 final int ANCHO_PLOTTER = 10812 - 2 * MARGEN_PASOS; 
 final int ALTO_PLOTTER = 15290 - 2 * MARGEN_PASOS;
+
+
+String[] svgs = new String[]{
+  "prueba1.svg",
+  "prueba2.svg",
+  "prueba3.svg",
+  "prueba4.svg",
+  "prueba5.svg",
+  "prueba6.svg",
+  "prueba7.svg",
+  "prueba8.svg",
+  "prueba9.svg",
+  "prueba10.svg",
+  "prueba11.svg",
+};
 
 void setup() {
   fullScreen();
@@ -71,10 +83,16 @@ void setup() {
 
   pintaFolioPlotter();
   pintarBarrasPlotter(x0PlotterSimulado, y0PlotterSimulado, false);
+  
+  dibujoCompleto = true;
+  
+  for(String svg : svgs){
+   svg2Dibujo(svg); 
+  }
 }
 
 void draw() {
-  if (nuevoDibujo) {
+  if (nuevoDibujo && dibujoCompleto) {
     nuevoDibujo = false;
     dibujoCompleto = false;
     indicePintado = dibujos.size() - 1;
@@ -86,7 +104,7 @@ void draw() {
 }
 
 /**
- provisional
+ * provisional
  */
 void keyPressed() {
   if (dibujos.size() > 0 && (keyCode == RIGHT || keyCode == LEFT)) {
@@ -136,12 +154,12 @@ void recorreCurvasMarcandoPuntosVisibles() {
 
 void cargaNuevosDibujos() {
   while (true) {
-    JSONArray jsonArray = loadJSONArray(URL + "/dibujo/descargar" + (ultimaId == -1 ? "" : "?last=" + (ultimaId)));
-    for (int i = 0; i < jsonArray.size(); i++) {    
+    JSONArray jsonArray = loadJSONArray(URL + "/dibujo/descargar");
+    for (int i = 0; i < jsonArray.size(); i++) {   
       JSONObject dibujo = jsonArray.getJSONObject(i);
-      ultimaId = dibujo.isNull("id") ? ultimaId : dibujo.getInt("id");
+      long id = dibujo.isNull("id") ? -1 : dibujo.getInt("id");
+      loadStrings(URL + "/dibujo/borrar?id=" + id);
       dibujos.add(parseaDibujo(dibujo));
-      // if (ultimaId == 10) { saveJSONObject(dibujo, "data/trump.json"); } // <-- si quieres guardar un dibujo ya que en el servicio rest no hay persistencia, al menos de momento
     }
     nuevoDibujo = nuevoDibujo || jsonArray.size() > 0;
     delay(FRECUENCIA_CONSULTA);
@@ -162,7 +180,7 @@ void simularPlotter() {
   Dibujo dibujo = dibujos.get(indicePintado);
   borraTercioPlotter();
   pintaFolioPlotter();
-  strokeWeight(GROSOR_TRAZO);
+  strokeWeight(2); // TODO poner el grueso del trazo en plan dibujo.gruesoTrazo ahora que hay TSPArt, éstas se ven mejor con trazo fino
   stroke(COLOR_TRAZO);
   for (Curva curva : dibujo.curvas) {
     for (int i = 0; i < curva.pixeles.size(); i++) {   
