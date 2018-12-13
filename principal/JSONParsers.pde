@@ -8,7 +8,7 @@ Dibujo parseaDibujo(JSONObject json) {
   String autor = json.isNull("autor") ? "" : json.getString("autor");
   JSONArray curvas = json.isNull("curvas") ? new JSONArray(): json.getJSONArray("curvas");
   long id = json.isNull("id") ? -1 : json.getLong("id");
-  return new Dibujo(parseaCurvas(curvas, vertical), vertical, autor, id);
+  return new Dibujo(parseaCurvas(curvas, vertical), vertical, autor, id, TRAZO_DIBUJO);
 }
 
 ArrayList<Curva> parseaCurvas(JSONArray jsonArray, boolean vertical) {

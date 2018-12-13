@@ -4,12 +4,14 @@ class Dibujo {
   final String autor;
   ArrayList<Curva> curvas;
   final boolean vertical;
+  final byte gruesoTrazo;
 
-  Dibujo(ArrayList<Curva> curvas, boolean vertical, String autor, long id) {
+  Dibujo(ArrayList<Curva> curvas, boolean vertical, String autor, long id, byte gruesoTrazo) {
     this.curvas = curvas;
     this.vertical = vertical;
     this.autor = autor;
     this.id = id;
+    this.gruesoTrazo = gruesoTrazo;
     
     /*
     BORRAR

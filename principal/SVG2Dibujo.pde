@@ -35,6 +35,6 @@ void svg2Dibujo(String ruta) {
   curvas.add(new Curva(-1, inicio, true, false));
   curvas.add(new Curva(-1, puntosCurva, true));
   curvas.add(new Curva(-1, fin, true, false));
-  dibujos.add(new Dibujo(curvas, true, "prueba", -1));
+  dibujos.add(new Dibujo(curvas, true, "prueba", -1, TRAZO_TSPART));
   nuevoDibujo = true;
 }

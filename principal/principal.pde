@@ -1,4 +1,9 @@
-// url del servicio rest de donde se descargan los dibujos //<>//
+import javax.xml.bind.DatatypeConverter; //<>//
+import java.io.ByteArrayInputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+
+// url del servicio rest de donde se descargan los dibujos
 final String URL = "http://plotter.ddns.net:8080";
 
 // frecuancia de consulta por nuevos dibujos
@@ -30,7 +35,7 @@ boolean nuevoDibujo;
 final int MARGEN_PLOTTER = 100;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
-final int PAUSA_PINTADO_SIMULADOR = 3;
+final int PAUSA_PINTADO_SIMULADOR = 5;
 //final int GROSOR_TRAZO = 4;    // mejor que el trazo dependa del dibujo, si es de un svg interesa que sea más fino
 int x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado;
 
@@ -45,26 +50,31 @@ final int Y0_PLOTTER = MARGEN_PASOS;
 final int ANCHO_PLOTTER = 10812 - 2 * MARGEN_PASOS; 
 final int ALTO_PLOTTER = 15290 - 2 * MARGEN_PASOS;
 
+final byte TRAZO_DIBUJO = 5;
+final byte TRAZO_TSPART = 2;
 
 String[] svgs = new String[]{
-  "prueba1.svg",
-  "prueba2.svg",
-  "prueba3.svg",
-  "prueba4.svg",
-  "prueba5.svg",
-  "prueba6.svg",
-  "prueba7.svg",
-  "prueba8.svg",
-  "prueba9.svg",
-  "prueba10.svg",
-  "prueba11.svg",
+  "prueba1.svg", 
+  "prueba2.svg", 
+  "prueba3.svg", 
+  "prueba4.svg", 
+  "prueba5.svg", 
+  "prueba6.svg", 
+  "prueba7.svg", 
+  "prueba8.svg", 
+  "prueba9.svg", 
+  "prueba10.svg", 
+  "prueba11.svg", 
 };
+
+PImage imagenPrueba;
 
 void setup() {
   fullScreen();
   background(COLOR_FONDO);
   stroke(NEGRO);
   thread("cargaNuevosDibujos");
+  thread("cargaNuevasImagenes");
 
   // división de la pantalla
   strokeWeight(2);
@@ -83,15 +93,18 @@ void setup() {
 
   pintaFolioPlotter();
   pintarBarrasPlotter(x0PlotterSimulado, y0PlotterSimulado, false);
-  
+
   dibujoCompleto = true;
-  
-  for(String svg : svgs){
-   svg2Dibujo(svg); 
+
+  for (String svg : svgs) {
+    svg2Dibujo(svg);
   }
 }
-
+PImage img;
 void draw() {
+  if (imagenPrueba != null) {
+    image(imagenPrueba, 0, 0);
+  }
   if (nuevoDibujo && dibujoCompleto) {
     nuevoDibujo = false;
     dibujoCompleto = false;
@@ -152,6 +165,21 @@ void recorreCurvasMarcandoPuntosVisibles() {
   }
 }
 
+/**
+ * TODO
+ * esto es de prueba de momento para probar la carga de las imágenes
+ */
+void cargaNuevasImagenes() {
+  while (true) {
+    JSONArray jsonArray = loadJSONArray(URL + "/imagen/ids");
+    if (jsonArray.size() > 0) {
+      imagenPrueba = loadImage(URL + "/imagen/descargar?id="+jsonArray.getLong(0), "png");
+      loadStrings(URL + "/imagen/borrar?id=" + jsonArray.getLong(0) );
+    }
+    delay(FRECUENCIA_CONSULTA);
+  }
+}
+
 void cargaNuevosDibujos() {
   while (true) {
     JSONArray jsonArray = loadJSONArray(URL + "/dibujo/descargar");
@@ -180,7 +208,7 @@ void simularPlotter() {
   Dibujo dibujo = dibujos.get(indicePintado);
   borraTercioPlotter();
   pintaFolioPlotter();
-  strokeWeight(2); // TODO poner el grueso del trazo en plan dibujo.gruesoTrazo ahora que hay TSPArt, éstas se ven mejor con trazo fino
+  strokeWeight(dibujo.gruesoTrazo); // TODO poner el grueso del trazo en plan dibujo.gruesoTrazo ahora que hay TSPArt, éstas se ven mejor con trazo fino
   stroke(COLOR_TRAZO);
   for (Curva curva : dibujo.curvas) {
     for (int i = 0; i < curva.pixeles.size(); i++) {   
