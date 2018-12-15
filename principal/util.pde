@@ -1,6 +1,6 @@
 /**
- modificado de:
- https://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#Java
+ * modificado de:
+ * https://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#Java
  */
 ArrayList<Punto> bresenham(Punto p1, Punto p2) {
   ArrayList<Punto> recta = new ArrayList<Punto>();
@@ -39,6 +39,25 @@ ArrayList<Punto> bresenham(Punto p1, Punto p2) {
     }
   }
   return recta;
+}
+
+String nombreSVG() {
+  return "/data/TSPArt/" 
+    + year() 
+    + anyadeCeros(month())
+    + anyadeCeros(day())
+    + anyadeCeros(hour())
+    + anyadeCeros(minute())
+    + anyadeCeros(second())
+    + ".svg";
+}
+
+String anyadeCeros(int i) {
+  String out = "" + i;
+  while (out.length() < 2) {
+    out = "0" + out;
+  }
+  return out;
 }
 
 ArrayList<Punto> rutaDibujo(ArrayList<PuntoRelativo> puntosRelativos, int x0, int y0, int ancho, int alto, boolean vertical) {

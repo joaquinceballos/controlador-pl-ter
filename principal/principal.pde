@@ -2,6 +2,8 @@ import javax.xml.bind.DatatypeConverter; //<>//
 import java.io.ByteArrayInputStream;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import java.util.NoSuchElementException;
+
 
 // url del servicio rest de donde se descargan los dibujos
 final String URL = "http://plotter.ddns.net:8080";
@@ -11,6 +13,9 @@ final int FRECUENCIA_CONSULTA = 5000;
 
 // control para el hilo que carga dibujos, sólo uno a la vez
 boolean hiloTrabajando = false;
+
+// control para el hilo que genera el path del TSPArt, sólo uno a la vez
+boolean hiloTSPArtTrabajando;
 
 // dibujos
 ArrayList<Dibujo> dibujos = new ArrayList<Dibujo>();
@@ -35,7 +40,7 @@ boolean nuevoDibujo;
 final int MARGEN_PLOTTER = 100;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
-final int PAUSA_PINTADO_SIMULADOR = 5;
+final int PAUSA_PINTADO_SIMULADOR = 2;
 //final int GROSOR_TRAZO = 4;    // mejor que el trazo dependa del dibujo, si es de un svg interesa que sea más fino
 int x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado;
 
@@ -51,23 +56,7 @@ final int ANCHO_PLOTTER = 10812 - 2 * MARGEN_PASOS;
 final int ALTO_PLOTTER = 15290 - 2 * MARGEN_PASOS;
 
 final byte TRAZO_DIBUJO = 5;
-final byte TRAZO_TSPART = 2;
-
-String[] svgs = new String[]{
-  "prueba1.svg", 
-  "prueba2.svg", 
-  "prueba3.svg", 
-  "prueba4.svg", 
-  "prueba5.svg", 
-  "prueba6.svg", 
-  "prueba7.svg", 
-  "prueba8.svg", 
-  "prueba9.svg", 
-  "prueba10.svg", 
-  "prueba11.svg", 
-};
-
-PImage imagenPrueba;
+final byte TRAZO_TSPART = 1;
 
 void setup() {
   fullScreen();
@@ -96,15 +85,13 @@ void setup() {
 
   dibujoCompleto = true;
 
-  for (String svg : svgs) {
-    svg2Dibujo(svg);
+  // Se cargan todos los svg guardados
+  for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
+    svg2Dibujo("/data/TSPArt/" + svg);
   }
 }
-PImage img;
+
 void draw() {
-  if (imagenPrueba != null) {
-    image(imagenPrueba, 0, 0);
-  }
   if (nuevoDibujo && dibujoCompleto) {
     nuevoDibujo = false;
     dibujoCompleto = false;
@@ -166,15 +153,38 @@ void recorreCurvasMarcandoPuntosVisibles() {
 }
 
 /**
- * TODO
- * esto es de prueba de momento para probar la carga de las imágenes
+ * Crea un nuevo objeto TSPArt pasando la imagen y nombre del fichero .svg a generar
+ * Operación muy pesada depndiendo del número de generaciones y número de puntos.
+ * Se podrían pasar el número de puntos al constructor... escogiendo el usuario lo que prefiera en el html... por ejmplo, es una opción, si no dejar unos 2000 - 5000 y va bien
+ *
+ * Algunas veces puede saltar excepción NoSuchElementException, en esos casos se intenta de nuevo haciendo una llamada recursiva
+ */
+void tspArt(PImage imagen) {
+  try {
+    String fichero = nombreSVG();
+    TSPArt t  = new TSPArt(imagen, fichero);
+    t.process();
+    svg2Dibujo(fichero);
+  } 
+  catch(NoSuchElementException e) {
+    tspArt(imagen);
+  }
+}
+
+/**
+ * TODO Aún está en pruebas pero va tirando ok
+ * Comprueba si hay imágenes nuevas consultando las ids de imágenes del resvicio REST
+ * En caso que que sí:
+ *   - Se descarga la primera de ellas y laborra del servidor
+ *   - Llama a tspArt pasando la imagen para generar el SVG 
  */
 void cargaNuevasImagenes() {
   while (true) {
     JSONArray jsonArray = loadJSONArray(URL + "/imagen/ids");
     if (jsonArray.size() > 0) {
-      imagenPrueba = loadImage(URL + "/imagen/descargar?id="+jsonArray.getLong(0), "png");
-      loadStrings(URL + "/imagen/borrar?id=" + jsonArray.getLong(0) );
+      PImage imagen = loadImage(URL + "/imagen/descargar?id="+jsonArray.getLong(0), "png");
+      loadStrings(URL + "/imagen/borrar?id=" + jsonArray.getLong(0));
+      tspArt(imagen);
     }
     delay(FRECUENCIA_CONSULTA);
   }
