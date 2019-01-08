@@ -12,19 +12,6 @@ class Dibujo {
     this.autor = autor;
     this.id = id;
     this.gruesoTrazo = gruesoTrazo;
-    
-    /*
-    BORRAR
-    int nPixeles = 0;
-    int nPasos = 0;
-    
-    for(Curva curva : curvas) {
-      nPixeles += curva.pixeles.size();
-      nPasos += curva.pasos.size();
-    }
-    
-    println("Dibujo: " + id + "\n\tpíxeles: " + nPixeles + "\n\tpasos: " + nPasos);
-    */
   }
 }
 

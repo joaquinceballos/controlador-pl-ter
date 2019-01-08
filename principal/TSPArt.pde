@@ -6,7 +6,7 @@ class TSPArt {
   
   final int N_OPTIMIZACIONES_PATH = 1000;
   final int N_GENERACIONES = 5;
-  final int MAX_PARTICLES = 3000;
+  final int MAX_PARTICLES = 4000;
 
   boolean reInitiallizeArray;
   boolean pausemode;

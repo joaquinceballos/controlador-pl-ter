@@ -1,4 +1,6 @@
-import javax.xml.bind.DatatypeConverter; //<>//
+import processing.serial.*; //<>//
+
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
@@ -37,7 +39,7 @@ final color COLOR_TRAZO = AZUL;
 boolean nuevoDibujo;
 
 // plóter simulado
-final int MARGEN_PLOTTER = 100;
+final int MARGEN_PLOTTER = 50;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
 final int PAUSA_PINTADO_SIMULADOR = 2;
@@ -49,14 +51,21 @@ boolean dibujoCompleto;
 
 // medidas del plóter real (en pasos) 
 // 1000 pasos de margen por cada lado, las medidas del largo en pasos del A4 que tomamos es 15290 (se puede afinar más adelante si hiciese falta)
-final int MARGEN_PASOS = 1000;
+final int MARGEN_PASOS = 0;
 final int X0_PLOTTER = MARGEN_PASOS;
 final int Y0_PLOTTER = MARGEN_PASOS; 
-final int ANCHO_PLOTTER = 10812 - 2 * MARGEN_PASOS; 
-final int ALTO_PLOTTER = 15290 - 2 * MARGEN_PASOS;
+final int ANCHO_PLOTTER = 10812 / 2 - 2 * MARGEN_PASOS; // división por 2 provisional
+final int ALTO_PLOTTER = 15290 / 2 - 2 * MARGEN_PASOS;
 
 final byte TRAZO_DIBUJO = 5;
 final byte TRAZO_TSPART = 1;
+
+// comunicación con el arduino
+Serial puerto;
+// dibujo que pinta el plóter real (esto es provisional)
+Dibujo dibujoPintandoEnPlotter;
+// control para saber si el plóter real está trabajando
+boolean plotterRealTrabajando;
 
 void setup() {
   fullScreen();
@@ -85,10 +94,13 @@ void setup() {
 
   dibujoCompleto = true;
 
-  // Se cargan todos los svg guardados
-  for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
-    svg2Dibujo("/data/TSPArt/" + svg);
-  }
+  /*
+  // Se pueden cargar todos los svg guardados
+   for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
+     svg2Dibujo("/data/TSPArt/" + svg);
+   }
+   */
+  //puerto = new Serial(this, "COM3", 9600);
 }
 
 void draw() {
@@ -101,11 +113,41 @@ void draw() {
   if (indicePintado != -1 && !dibujoCompleto) {
     simularPlotter();
   }
+  if (!dibujos.isEmpty() && dibujos.get(indicePintado) != null && !plotterRealTrabajando) {
+    dibujoPintandoEnPlotter = dibujos.get(indicePintado);
+    if (puerto != null) {
+      thread("plotterReal");
+    }
+  }
 }
 
-/**
- * provisional
- */
+void plotterReal() {
+  long inicio = millis();
+  long tUltimoPrint = 0;
+  plotterRealTrabajando = true;
+  long totalPuntos = 0;
+  long puntos = 0;
+  for (Curva curva : dibujoPintandoEnPlotter.curvas) {
+    totalPuntos += curva.pasos.size();
+  }
+  for (Curva curva : dibujoPintandoEnPlotter.curvas) {
+    TrazoPlotter trazoPlotter = new TrazoPlotter(curva.pasos, curva.pintable);
+    while (!trazoPlotter.nuevoSubtrazo()) {
+      // cada minuto imprime el porcentaje completado
+      if (millis() - tUltimoPrint > 60000) {
+        tUltimoPrint = millis();
+        println("completado " + ((puntos + trazoPlotter.ultimoPunto) * 100 / totalPuntos) + "%");
+      }
+    }
+    tUltimoPrint = millis();
+    puntos += curva.pasos.size();
+    println("completado " + (puntos * 100 / totalPuntos) + "%");
+  }
+  long t2 = millis() - inicio;
+  println("tiempo empleado: " + (t2 / 60000) + " minutos y " + (t2 % 60000 / 1000) + " segundos");
+  //plotterRealTrabajando = false;
+}
+
 void keyPressed() {
   if (dibujos.size() > 0 && (keyCode == RIGHT || keyCode == LEFT)) {
     if (keyCode == LEFT) {
@@ -253,20 +295,22 @@ void pintaFolioPlotter() {
 }
 
 void pintarBarrasPlotter(int x, int y, boolean lapiz) {
-  int sobresale = 10;
-  stroke(NEGRO);
-  strokeWeight(2);        
-  fill(COLOR_BARRA);
-  rect(x - ANCHO_BARRA_PLOTTER / 2, 
-    y0PlotterSimulado - sobresale, 
-    ANCHO_BARRA_PLOTTER, 
-    altoPlotterSimulado + 2 * sobresale);
-  rect(x0PlotterSimulado - sobresale, 
-    y - ANCHO_BARRA_PLOTTER / 2, 
-    anchoPlotterSimulado + 2 * sobresale, 
-    ANCHO_BARRA_PLOTTER);
-  if (lapiz) {
-    fill(ROJO);
-    ellipse(x, y, 2 * ANCHO_BARRA_PLOTTER, 2 * ANCHO_BARRA_PLOTTER);
+  if (!dibujoCompleto) {
+    int sobresale = 10;
+    stroke(NEGRO);
+    strokeWeight(2);        
+    fill(COLOR_BARRA);
+    rect(x - ANCHO_BARRA_PLOTTER / 2, 
+      y0PlotterSimulado - sobresale, 
+      ANCHO_BARRA_PLOTTER, 
+      altoPlotterSimulado + 2 * sobresale);
+    rect(x0PlotterSimulado - sobresale, 
+      y - ANCHO_BARRA_PLOTTER / 2, 
+      anchoPlotterSimulado + 2 * sobresale, 
+      ANCHO_BARRA_PLOTTER);
+    if (lapiz) {
+      fill(ROJO);
+      ellipse(x, y, 2 * ANCHO_BARRA_PLOTTER, 2 * ANCHO_BARRA_PLOTTER);
+    }
   }
 }
