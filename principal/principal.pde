@@ -1,4 +1,4 @@
-import processing.serial.*; //<>//
+import processing.serial.*;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -28,12 +28,12 @@ int indicePintado = -1;
 // colores
 final color BLANCO = #FFFFFF;
 final color NEGRO = #000000;
-final color COLOR_FONDO = #F7F4D9;
+final color COLOR_FONDO = #333333;
 final color ROJO = #FF0000;
 final color AZUL = #0000FF;
 final color GRIS = color(128);
 final color COLOR_BARRA = #B7BDC1;
-final color COLOR_TRAZO = AZUL;
+final color COLOR_TRAZO = COLOR_FONDO;
 
 // hay nuevos dibujos recién cargados
 boolean nuevoDibujo;
@@ -98,7 +98,7 @@ void setup() {
 
   pintaFolioPlotter();
   pintarBarrasPlotter(x0PlotterSimulado, y0PlotterSimulado, false);
-
+  pintarTexto();
   dibujoCompleto = true;
 
   /*
@@ -112,6 +112,7 @@ void setup() {
 }
 
 void draw() {
+  
   if (nuevoDibujo && dibujoCompleto) {
     nuevoDibujo = false;
     dibujoCompleto = false;
@@ -127,6 +128,15 @@ void draw() {
       thread("plotterReal");
     }
   }
+}
+
+void pintarTexto(){
+  textSize(80);
+  textAlign(CENTER, CENTER);
+  text("PROYECTO PLOTTER\n - Informática Audiovisual -", width/2 - 350, height/2); 
+  fill(#e0dfdc);
+  textSize(60);
+  text("Simulación", width-300, 70);
 }
 
 void plotterReal() {
