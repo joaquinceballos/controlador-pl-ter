@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 import java.util.NoSuchElementException;
 
 
-// url del servicio rest de donde se descargan los dibujos
+// url del servicio rest
 final String URL = "http://plotter.ddns.net:8080";
 
 // frecuancia de consulta por nuevos dibujos
@@ -42,8 +42,7 @@ boolean nuevoDibujo;
 final int MARGEN_PLOTTER = 50;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
-final int PAUSA_PINTADO_SIMULADOR = 2;
-//final int GROSOR_TRAZO = 4;    // mejor que el trazo dependa del dibujo, si es de un svg interesa que sea más fino
+final int PAUSA_PINTADO_SIMULADOR = 8;
 int x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado;
 
 // dibujo está siendo pintado en estos momentos
@@ -57,8 +56,11 @@ final int Y0_PLOTTER = MARGEN_PASOS;
 final int ANCHO_PLOTTER = 10812 / 2 - 2 * MARGEN_PASOS; // división por 2 provisional
 final int ALTO_PLOTTER = 15290 / 2 - 2 * MARGEN_PASOS;
 
-final byte TRAZO_DIBUJO = 5;
-final byte TRAZO_TSPART = 1;
+//final byte TRAZO_DIBUJO = 5;
+//final byte TRAZO_TSPART = 1;
+
+byte grosorTrazoTSPArt;
+byte grosorTrazoDibujo;
 
 // comunicación con el arduino
 Serial puerto;
@@ -77,6 +79,11 @@ void setup() {
   // división de la pantalla
   strokeWeight(2);
   rect(width - width / 3, MARGEN_PLOTTER, ANCHO_DIVISOR_PANTALLA, height - 2 * MARGEN_PLOTTER);
+  
+  grosorTrazoTSPArt = (byte) (height / 500);
+  grosorTrazoDibujo = (byte) (height / 250);
+  
+  println(grosorTrazoTSPArt);
 
   // medidas del plotter simulado en pantalla
   x0PlotterSimulado = width -  width / 3 + MARGEN_PLOTTER;
@@ -101,6 +108,7 @@ void setup() {
    }
    */
   //puerto = new Serial(this, "COM3", 9600);
+    // svg2Dibujo("/data/TSPArt/20190108213647.svg");
 }
 
 void draw() {

@@ -1,3 +1,6 @@
+/**
+* Comunicación con el Arduino
+*/
 class TrazoPlotter {
   ArrayList<Punto> trazo;
   int ultimoPunto = 0;
