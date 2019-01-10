@@ -1,4 +1,4 @@
-import processing.serial.*;
+import processing.serial.*; //<>//
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -42,11 +42,16 @@ boolean nuevoDibujo;
 final int MARGEN_PLOTTER = 50;
 final int ANCHO_BARRA_PLOTTER = 10;
 final int ANCHO_DIVISOR_PANTALLA = 10;
-final int PAUSA_PINTADO_SIMULADOR = 8;
+final byte MIN_PAUSA = 0;
+final byte MAX_PAUSA = 10;
+byte pausaPintandoSimulador =  9;
 int x0PlotterSimulado, y0PlotterSimulado, anchoPlotterSimulado, altoPlotterSimulado;
 
 // dibujo está siendo pintado en estos momentos
 boolean dibujoCompleto;
+
+// control del tiempo del simulador del plóter
+long tInicioSimulacion;
 
 // medidas del plóter real (en pasos) 
 // 1000 pasos de margen por cada lado, las medidas del largo en pasos del A4 que tomamos es 15290 (se puede afinar más adelante si hiciese falta)
@@ -75,14 +80,14 @@ void setup() {
   stroke(NEGRO);
   thread("cargaNuevosDibujos");
   thread("cargaNuevasImagenes");
-
+  thread("controlTextoSimulacion");
   // división de la pantalla
   strokeWeight(2);
   rect(width - width / 3, MARGEN_PLOTTER, ANCHO_DIVISOR_PANTALLA, height - 2 * MARGEN_PLOTTER);
-  
+
   grosorTrazoTSPArt = (byte) (height / 500);
   grosorTrazoDibujo = (byte) (height / 250);
-  
+
   println(grosorTrazoTSPArt);
 
   // medidas del plotter simulado en pantalla
@@ -96,28 +101,28 @@ void setup() {
   fill(BLANCO);
   rect(width - width / 3, MARGEN_PLOTTER, 10, height - 2 * MARGEN_PLOTTER);
 
+  textFont(createFont("Century Gothic", 1));
   pintaFolioPlotter();
-  pintarBarrasPlotter(x0PlotterSimulado, y0PlotterSimulado, false);
-  pintarTexto();
+  pintarTextoCentro();
+  pintaImagenBeta();
+
   dibujoCompleto = true;
 
-  /*
   // Se pueden cargar todos los svg guardados
-   for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
-     svg2Dibujo("/data/TSPArt/" + svg);
-   }
-   */
+  for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
+    svg2Dibujo("/data/TSPArt/" + svg);
+  }
+  //svg2Dibujo("/data/TSPArt/gafas.svg" );
   //puerto = new Serial(this, "COM3", 9600);
-    // svg2Dibujo("/data/TSPArt/20190108213647.svg");
 }
 
 void draw() {
-  
   if (nuevoDibujo && dibujoCompleto) {
     nuevoDibujo = false;
     dibujoCompleto = false;
     indicePintado = dibujos.size() - 1;
     thread("recorreCurvasMarcandoPuntosVisibles");
+    tInicioSimulacion = millis();
   }
   if (indicePintado != -1 && !dibujoCompleto) {
     simularPlotter();
@@ -127,16 +132,14 @@ void draw() {
     if (puerto != null) {
       thread("plotterReal");
     }
-  }
-}
-
-void pintarTexto(){
-  textSize(80);
-  textAlign(CENTER, CENTER);
-  text("PROYECTO PLOTTER\n - Informática Audiovisual -", width/2 - 350, height/2); 
-  fill(#e0dfdc);
-  textSize(60);
-  text("Simulación", width-300, 70);
+  }  
+  fill(COLOR_FONDO);
+  noStroke();
+  rect(x0PlotterSimulado - MARGEN_PLOTTER + ANCHO_DIVISOR_PANTALLA + 5, 
+    height - y0PlotterSimulado + MARGEN_PLOTTER / 2, 
+    anchoPlotterSimulado + 2 * MARGEN_PLOTTER - ANCHO_DIVISOR_PANTALLA - 5, 
+    height);
+  pintaTextoVelocidad();
 }
 
 void plotterReal() {
@@ -167,6 +170,11 @@ void plotterReal() {
 }
 
 void keyPressed() {
+  if (keyCode == UP) {
+    pausaPintandoSimulador = (byte) max(MIN_PAUSA, pausaPintandoSimulador - 1);
+  } else if (keyCode == DOWN) {
+    pausaPintandoSimulador = (byte) min(MAX_PAUSA, pausaPintandoSimulador + 1);
+  }
   if (dibujos.size() > 0 && (keyCode == RIGHT || keyCode == LEFT)) {
     if (keyCode == LEFT) {
       indicePintado = indicePintado == 0 ? dibujos.size() - 1 : indicePintado - 1;
@@ -206,7 +214,7 @@ void recorreCurvasMarcandoPuntosVisibles() {
           return;
         }
         punto.visible = true;
-        delay(PAUSA_PINTADO_SIMULADOR);
+        delay(pausaPintandoSimulador);
       }
     }
   }
@@ -287,6 +295,7 @@ void simularPlotter() {
         point(punto.x, punto.y);
       } else if (!punto.visible) {
         pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
+        pintaTextoSimulacion();
         return;
       }
     }
@@ -300,9 +309,9 @@ void borraTercioPlotter() {
   fill(COLOR_FONDO);
   noStroke();
   rect(x0PlotterSimulado - MARGEN_PLOTTER + ANCHO_DIVISOR_PANTALLA + pelin, 
-    y0PlotterSimulado - MARGEN_PLOTTER, 
+    0, 
     anchoPlotterSimulado + 2 * MARGEN_PLOTTER - ANCHO_DIVISOR_PANTALLA - pelin, 
-    altoPlotterSimulado + 2 * MARGEN_PLOTTER);
+    height);
 }
 
 void pintaFolioPlotter() {

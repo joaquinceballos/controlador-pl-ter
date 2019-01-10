@@ -91,3 +91,75 @@ ArrayList<Punto> rutaDibujo(ArrayList<PuntoRelativo> puntosRelativos, int x0, in
   }
   return salida;
 }
+
+void textoConSombra(String s, float x, float y){
+  fill(NEGRO);
+  text(s, x, y + textAscent() / 15);
+  fill(#e0dfdc);
+  text(s, x, y);
+}
+
+void pintarTextoCentro() {
+  String s1 = "PROYECTO PLOTTER";
+  String s2 ="- INFORMÁTICA AUDIOVISUAL 2018/19 -";
+  int y = height / 3;
+  int i = 1;
+  textSize(i);
+  while (textWidth(s1) < (2 * width / 3) * 0.8) {
+    i++;
+    textSize(i);
+  }
+  textoConSombra(s1, width / 3 - textWidth(s1) / 2, y); 
+  y += textAscent() +  textDescent();  
+  i = 1;
+  textSize(i);
+  while (textWidth(s2) < (2 * width / 3) * 0.8) {
+    i++;
+    textSize(i);
+  }
+  textoConSombra(s2, width / 3 - textWidth(s2) / 2, y);
+}
+
+boolean tocaPintarTexto;
+
+void controlTextoSimulacion() {
+  while (true) {
+    tocaPintarTexto = indicePintado != -1 && !dibujoCompleto ? !tocaPintarTexto : false;
+    delay(1000);
+  }
+}
+
+void pintaTextoSimulacion() {
+  if (!tocaPintarTexto) {
+    return;
+  }
+  String s3 = "Simulación";
+  int i, y;
+  i = 1;
+  textSize(i);
+  while (textWidth(s3) < width / 3 * 0.4) {
+    i++;
+    textSize(i);
+  }
+  y = y0PlotterSimulado / 2 + (int) textAscent() / 2;
+  textoConSombra(s3, width - width / 6 - textWidth(s3) / 2, y);
+}
+
+void pintaTextoVelocidad(){
+  String s4 = (pausaPintandoSimulador == 0 ? "∞" : ((int)map(pausaPintandoSimulador, MIN_PAUSA, MAX_PAUSA, MAX_PAUSA + 1, MIN_PAUSA + 1))) + "x";
+  textSize((width / 3) / 30);
+  int y = height - y0PlotterSimulado / 2 + (int) textAscent() / 2;
+  textoConSombra(s4,width - width / 6 - textWidth(s4) / 2, y);  
+}
+
+void pintaImagenBeta() {
+  PImage beta = loadImage("beta.png");
+  PImage betaNegro = beta.copy();
+  betaNegro.filter(THRESHOLD, 5);
+  float wb = beta.width;
+  float hb = beta.height;
+  float w = width / 4;
+  float h = w * hb / wb;
+  image(betaNegro, width / 3 - w / 2, height - 2 * h + h / 15, w, h);
+  image(beta, width / 3 - w / 2, height - 2 * h, w, h);
+}

@@ -1,7 +1,6 @@
 import toxi.geom.*;
 import toxi.geom.mesh2d.*;
 
-
 class TSPArt {
   
   final int N_OPTIMIZACIONES_PATH = 1000;
