@@ -61,9 +61,6 @@ final int Y0_PLOTTER = MARGEN_PASOS;
 final int ANCHO_PLOTTER = 10812 / 2 - 2 * MARGEN_PASOS; // división por 2 provisional
 final int ALTO_PLOTTER = 15290 / 2 - 2 * MARGEN_PASOS;
 
-//final byte TRAZO_DIBUJO = 5;
-//final byte TRAZO_TSPART = 1;
-
 byte grosorTrazoTSPArt;
 byte grosorTrazoDibujo;
 
@@ -110,9 +107,14 @@ void setup() {
 
   // Se pueden cargar todos los svg guardados
   for (String svg : new File(sketchPath() + "/data/TSPArt/").list()) {
-    svg2Dibujo("/data/TSPArt/" + svg);
+    //svg2Dibujo("/data/TSPArt/" + svg);
+  }  
+  for (String dibujo : new File(sketchPath() + "/data/Dibujos/").list()){     
+      dibujos.add(parseaDibujo(loadJSONObject("/data/Dibujos/" + dibujo))); 
   }
-  //svg2Dibujo("/data/TSPArt/gafas.svg" );
+  nuevoDibujo = !dibujos.isEmpty();
+  
+  // comunicación con arduino, si no se usa dejarlo a null
   //puerto = new Serial(this, "COM3", 9600);
 }
 
@@ -127,7 +129,7 @@ void draw() {
   if (indicePintado != -1 && !dibujoCompleto) {
     simularPlotter();
   }
-  if (!dibujos.isEmpty() && dibujos.get(indicePintado) != null && !plotterRealTrabajando) {
+  if (!dibujos.isEmpty() && indicePintado >= 0 && dibujos.get(indicePintado) != null && !plotterRealTrabajando) {
     dibujoPintandoEnPlotter = dibujos.get(indicePintado);
     if (puerto != null) {
       thread("plotterReal");
@@ -265,6 +267,7 @@ void cargaNuevosDibujos() {
       JSONObject dibujo = jsonArray.getJSONObject(i);
       long id = dibujo.isNull("id") ? -1 : dibujo.getInt("id");
       loadStrings(URL + "/dibujo/borrar?id=" + id);
+      saveJSONObject(dibujo, nombreDibujo());
       dibujos.add(parseaDibujo(dibujo));
     }
     nuevoDibujo = nuevoDibujo || jsonArray.size() > 0;
@@ -294,7 +297,7 @@ void simularPlotter() {
       if (punto.visible && curva.pintable) {
         point(punto.x, punto.y);
       } else if (!punto.visible) {
-        //pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
+        pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
         pintaTextoSimulacion();
         return;
       }

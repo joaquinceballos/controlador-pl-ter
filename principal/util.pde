@@ -41,15 +41,21 @@ ArrayList<Punto> bresenham(Punto p1, Punto p2) {
   return recta;
 }
 
-String nombreSVG() {
-  return "/data/TSPArt/" 
-    + year() 
+String fecha() {
+  return year() 
     + anyadeCeros(month())
     + anyadeCeros(day())
     + anyadeCeros(hour())
     + anyadeCeros(minute())
-    + anyadeCeros(second())
-    + ".svg";
+    + anyadeCeros(second());
+}
+
+String nombreDibujo() {
+  return "/data/Dibujos/" + fecha() + ".json";
+}
+
+String nombreSVG() {
+  return "/data/TSPArt/" + fecha() + ".svg";
 }
 
 String anyadeCeros(int i) {
@@ -92,7 +98,7 @@ ArrayList<Punto> rutaDibujo(ArrayList<PuntoRelativo> puntosRelativos, int x0, in
   return salida;
 }
 
-void textoConSombra(String s, float x, float y){
+void textoConSombra(String s, float x, float y) {
   fill(NEGRO);
   text(s, x, y + textAscent() / 15);
   fill(#e0dfdc);
@@ -145,11 +151,11 @@ void pintaTextoSimulacion() {
   textoConSombra(s3, width - width / 6 - textWidth(s3) / 2, y);
 }
 
-void pintaTextoVelocidad(){
+void pintaTextoVelocidad() {
   String s4 = (pausaPintandoSimulador == 0 ? "∞" : ((int)map(pausaPintandoSimulador, MIN_PAUSA, MAX_PAUSA, MAX_PAUSA + 1, MIN_PAUSA + 1))) + "x";
   textSize((width / 3) / 30);
   int y = height - y0PlotterSimulado / 2 + (int) textAscent() / 2;
-  textoConSombra(s4,width - width / 6 - textWidth(s4) / 2, y);  
+  textoConSombra(s4, width - width / 6 - textWidth(s4) / 2, y);
 }
 
 void pintaImagenBeta() {
