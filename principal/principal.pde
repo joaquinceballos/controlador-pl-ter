@@ -294,7 +294,7 @@ void simularPlotter() {
       if (punto.visible && curva.pintable) {
         point(punto.x, punto.y);
       } else if (!punto.visible) {
-        pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
+        //pintarBarrasPlotter(punto.x, punto.y, curva.pintable);
         pintaTextoSimulacion();
         return;
       }
